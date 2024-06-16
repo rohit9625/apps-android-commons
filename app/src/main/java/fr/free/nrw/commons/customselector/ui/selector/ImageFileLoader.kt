@@ -55,7 +55,12 @@ class ImageFileLoader(val context: Context) : CoroutineScope{
      * Load Device images using cursor
      */
     private fun getImages(listener:ImageLoaderListener) {
-        val cursor = context.contentResolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null, null, MediaStore.Images.Media.DATE_ADDED + " DESC")
+        val cursor = context.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection,
+            null, null,
+            MediaStore.Images.Media.DATE_ADDED + " DESC"
+        )
+
         if (cursor == null) {
             listener.onFailed(NullPointerException())
             return
@@ -91,7 +96,7 @@ class ImageFileLoader(val context: Context) : CoroutineScope{
                         null
                     }
 
-                if (file != null && file.exists() && name != null && path != null && bucketName != null) {
+                if (file != null && file.exists() && name != null && bucketName != null) {
                     val extension = path.substringAfterLast(".", "")
                     // Check if the extension is one of the allowed types
                     if (extension.lowercase(Locale.ROOT) !in arrayOf("jpg", "jpeg", "png", "svg", "gif", "tiff", "webp", "xcf")) {
