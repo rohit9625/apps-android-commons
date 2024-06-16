@@ -59,6 +59,24 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.2.0-alpha02"
     implementation "com.squareup.okhttp3:okhttp-ws:$OKHTTP_VERSION"
 
+    // Compose UI
+    def composeBom = platform('androidx.compose:compose-bom:2024.05.00')
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+
+    implementation "androidx.appcompat:appcompat:1.7.0"
+    implementation "androidx.compose.runtime:runtime-android:1.6.7"
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview-android:1.6.7")
+    implementation("androidx.compose.ui:ui-tooling-android:1.6.7")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation("io.coil-kt:coil-compose:2.2.2")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
     // Logging
     implementation 'ch.acra:acra-dialog:5.8.4'
     implementation 'ch.acra:acra-mail:5.8.4'
@@ -186,7 +204,7 @@ project.gradle.taskGraph.whenReady {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
 
     defaultConfig {
         //applicationId 'fr.free.nrw.commons'
@@ -361,6 +379,7 @@ android {
 
     buildFeatures {
         viewBinding true
+        compose true
     }
     namespace 'fr.free.nrw.commons'
     lint {
