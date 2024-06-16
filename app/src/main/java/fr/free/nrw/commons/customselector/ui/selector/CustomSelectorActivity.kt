@@ -10,8 +10,14 @@ import android.view.Window
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.activity.compose.setContent
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import fr.free.nrw.commons.R
 import fr.free.nrw.commons.customselector.database.NotForUploadStatus
 import fr.free.nrw.commons.customselector.database.NotForUploadStatusDao
@@ -20,6 +26,8 @@ import fr.free.nrw.commons.customselector.helper.CustomSelectorConstants.SHOULD_
 import fr.free.nrw.commons.customselector.listeners.FolderClickListener
 import fr.free.nrw.commons.customselector.listeners.ImageSelectListener
 import fr.free.nrw.commons.customselector.model.Image
+import fr.free.nrw.commons.customselector.ui.screens.CustomSelectorScreen
+import fr.free.nrw.commons.customselector.ui.screens.ImageGridScreen
 import fr.free.nrw.commons.databinding.ActivityCustomSelectorBinding
 import fr.free.nrw.commons.databinding.CustomSelectorBottomLayoutBinding
 import fr.free.nrw.commons.databinding.CustomSelectorToolbarBinding
@@ -119,18 +127,17 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCustomSelectorBinding.inflate(layoutInflater)
-        toolbarBinding = CustomSelectorToolbarBinding.bind(binding.root)
-        bottomSheetBinding = CustomSelectorBottomLayoutBinding.bind(binding.root)
-        val view = binding.root
-        setContentView(view)
 
         prefs = applicationContext.getSharedPreferences("CustomSelector", MODE_PRIVATE)
-        viewModel = ViewModelProvider(this, customSelectorViewModelFactory).get(
-            CustomSelectorViewModel::class.java
-        )
+        viewModel = ViewModelProvider(
+            this, customSelectorViewModelFactory
+        )[CustomSelectorViewModel::class.java]
 
-        setupViews()
+        setContent {
+            CustomSelector(viewModel = viewModel)
+        }
+
+//        setupViews()
 
         if (prefs.getBoolean("customSelectorFirstLaunch", true)) {
             // show welcome dialog on first launch
@@ -143,7 +150,9 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
             val lastOpenFolderId: Long = prefs.getLong(FOLDER_ID, 0L)
             val lastOpenFolderName: String? = prefs.getString(FOLDER_NAME, null)
             val lastItemId: Long = prefs.getLong(ITEM_ID, 0)
-            lastOpenFolderName?.let { onFolderClick(lastOpenFolderId, it, lastItemId) }
+            lastOpenFolderName?.let {
+                onFolderClick(lastOpenFolderId, it, lastItemId)
+            }
         }
     }
 
@@ -162,7 +171,6 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
             imageFragment?.passSelectedImages(selectedImages, shouldRefresh)
         }
     }
-
     /**
      * Show Custom Selector Welcome Dialog.
      */
@@ -178,11 +186,11 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
      * Set up view, default folder view.
      */
     private fun setupViews() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, FolderFragment.newInstance())
-            .commit()
-        fetchData()
-        setUpToolbar()
+//        supportFragmentManager.beginTransaction()
+//            .replace(R.id.fragment_container, FolderFragment.newInstance())
+//            .commit()
+//        fetchData()
+//        setUpToolbar()
         setUpBottomLayout()
     }
 
@@ -217,7 +225,7 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
             }
         }
         markAsNotForUpload(selectedImages)
-        toolbarBinding.imageLimitError.visibility = View.INVISIBLE
+//        toolbarBinding.imageLimitError.visibility = View.INVISIBLE
     }
 
     /**
@@ -367,11 +375,11 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
         uploadLimitExceededBy = max(selectedImages.size - uploadLimit,0)
 
         if (uploadLimitExceeded && selectedNotForUploadImages == 0) {
-            toolbarBinding.imageLimitError.visibility = View.VISIBLE
+//            toolbarBinding.imageLimitError.visibility = View.VISIBLE
             bottomSheetBinding.upload.text = resources.getString(
                 R.string.custom_selector_button_limit_text, uploadLimit)
         } else {
-            toolbarBinding.imageLimitError.visibility = View.INVISIBLE
+//            toolbarBinding.imageLimitError.visibility = View.INVISIBLE
             bottomSheetBinding.upload.text = resources.getString(R.string.upload)
         }
 
@@ -484,11 +492,11 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
      * If image fragment is open, overwrite its attributes otherwise discard the values.
      */
     override fun onDestroy() {
-        if (isImageFragmentOpen) {
-            prefs.edit().putLong(FOLDER_ID, bucketId).putString(FOLDER_NAME, bucketName).apply()
-        } else {
-            prefs.edit().remove(FOLDER_ID).remove(FOLDER_NAME).apply()
-        }
+//        if (isImageFragmentOpen) {
+//            prefs.edit().putLong(FOLDER_ID, bucketId).putString(FOLDER_NAME, bucketName).apply()
+//        } else {
+//            prefs.edit().remove(FOLDER_ID).remove(FOLDER_NAME).apply()
+//        }
         super.onDestroy()
     }
 
@@ -496,5 +504,31 @@ class CustomSelectorActivity : BaseActivity(), FolderClickListener, ImageSelectL
         const val FOLDER_ID: String = "FolderId"
         const val FOLDER_NAME: String = "FolderName"
         const val ITEM_ID: String = "ItemId"
+    }
+
+}
+
+@Composable
+fun CustomSelector(viewModel: CustomSelectorViewModel) {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "main") {
+        composable("main") {
+            CustomSelectorScreen(
+                viewModel = viewModel,
+                onFolderClick = {
+                    navController.navigate("images")
+                }
+            )
+        }
+
+        composable("images") {
+            ImageGridScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.navigateUp()
+                }
+            )
+        }
     }
 }
