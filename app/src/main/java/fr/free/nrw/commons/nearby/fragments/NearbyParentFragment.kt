@@ -511,7 +511,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         binding?.map?.overlays?.add(scaleBarOverlay)
         binding?.map?.getZoomController()
             ?.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
-        binding?.map?.controller?.setZoom(ZOOM_LEVEL.toInt())
+        binding?.map?.controller?.setZoom(ZOOM_LEVEL)
 
         // if we came from Explore map using 'Show in Nearby', load Explore map camera position
         if (isCameFromExploreMap()) {
@@ -589,7 +589,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 }
             }
             childFragmentManager.beginTransaction()
-                .replace(fr.free.nrw.commons.R.id.fl_container_nearby_children, fragment)
+                .replace(R.id.fl_container_nearby_children, fragment)
                 .commit()
         }
 
@@ -631,31 +631,31 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun initThemePreferences() {
         if (_isDarkTheme) {
             binding!!.bottomSheetNearby.rvNearbyList.setBackgroundColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.contributionListDarkBackground)
+                ContextCompat.getColor(requireContext(), R.color.contributionListDarkBackground)
             )
             binding!!.nearbyFilterList.checkboxTriStates.setTextColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.white)
+                ContextCompat.getColor(requireContext(), R.color.white)
             )
             binding!!.nearbyFilterList.checkboxTriStates.setTextColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.white)
+                ContextCompat.getColor(requireContext(), R.color.white)
             )
             binding!!.nearbyFilterList.root.setBackgroundColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.contributionListDarkBackground)
+                ContextCompat.getColor(requireContext(), R.color.contributionListDarkBackground)
             )
             binding!!.map.overlayManager.tilesOverlay
                 .setColorFilter(TilesOverlay.INVERT_COLORS)
         } else {
             binding!!.bottomSheetNearby.rvNearbyList.setBackgroundColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.white)
+                ContextCompat.getColor(requireContext(), R.color.white)
             )
             binding!!.nearbyFilterList.checkboxTriStates.setTextColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.contributionListDarkBackground)
+                ContextCompat.getColor(requireContext(), R.color.contributionListDarkBackground)
             )
             binding!!.nearbyFilterList.root.setBackgroundColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.white)
+                ContextCompat.getColor(requireContext(), R.color.white)
             )
             binding!!.nearbyFilterList.root.setBackgroundColor(
-                requireContext().resources.getColor(fr.free.nrw.commons.R.color.white)
+                ContextCompat.getColor(requireContext(), R.color.white)
             )
         }
     }
@@ -2851,7 +2851,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     companion object {
-        private const val ZOOM_LEVEL = 15f
+        private const val ZOOM_LEVEL: Double = 15.0
 
         /**
          * WLM URL
