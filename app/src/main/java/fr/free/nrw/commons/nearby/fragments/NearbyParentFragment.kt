@@ -133,7 +133,6 @@ import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
@@ -774,7 +773,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         } else {
             lastKnownLocation = defaultLatLng
         }
-        if (binding!!.map != null && !isCameFromExploreMap()) {
+        if (!isCameFromExploreMap()) {
             moveCameraToPosition(
                 GeoPoint(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
             )
@@ -818,9 +817,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         }
 
         if (presenter == null) Timber.w("NearbyParentFragment: presenter is null")
-        if (applicationKvStore == null) Timber.w("NearbyParentFragment: applicationKvStore is null")
 
-        presenter?.removeNearbyPreferences(applicationKvStore ?: return)
+        presenter?.removeNearbyPreferences(applicationKvStore)
     }
 
     private fun initViews() {
@@ -1864,23 +1862,17 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     override fun onLocationChangedSignificantly(latLng: LatLng) {
         Timber.d("Location significantly changed")
-        if (latLng != null) {
-            handleLocationUpdate(latLng, LocationChangeType.LOCATION_SIGNIFICANTLY_CHANGED)
-        }
+        handleLocationUpdate(latLng, LocationChangeType.LOCATION_SIGNIFICANTLY_CHANGED)
     }
 
     override fun onLocationChangedSlightly(latLng: LatLng) {
         Timber.d("Location slightly changed")
-        if (latLng != null) { //If the map has never ever shown the current location, lets do it know
-            handleLocationUpdate(latLng, LocationChangeType.LOCATION_SLIGHTLY_CHANGED)
-        }
+        handleLocationUpdate(latLng, LocationChangeType.LOCATION_SLIGHTLY_CHANGED)
     }
 
     override fun onLocationChangedMedium(latLng: LatLng) {
         Timber.d("Location changed medium")
-        if (latLng != null) { //If the map has never ever shown the current location, lets do it know
-            handleLocationUpdate(latLng, LocationChangeType.LOCATION_SIGNIFICANTLY_CHANGED)
-        }
+        handleLocationUpdate(latLng, LocationChangeType.LOCATION_SIGNIFICANTLY_CHANGED)
     }
 
     fun backButtonClicked(): Boolean {
@@ -1981,7 +1973,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         val displayExists = false
         val displayNeedsPhoto = false
         val displayWlm = false
-        if (selectedLabels == null || selectedLabels.size == 0) {
+        if (selectedLabels.isNullOrEmpty()) {
             replaceMarkerOverlays(NearbyController.markerLabelList)
             return
         }
@@ -1990,10 +1982,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             val place = markerPlaceGroup.place
             // When label filter is engaged
             // then compare it against place's label
-            if (selectedLabels != null && (selectedLabels.size != 0 || !filterForPlaceState)
+            if ((selectedLabels.isNotEmpty() || !filterForPlaceState)
                 && (!selectedLabels.contains(place.label)
-                    && !(selectedLabels.contains(Label.BOOKMARKS)
-                    && markerPlaceGroup.isBookmarked))
+                && !(selectedLabels.contains(Label.BOOKMARKS) && markerPlaceGroup.isBookmarked))
             ) {
                 continue
             }
@@ -2035,8 +2026,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         replaceMarkerOverlays(placeGroupsToShow)
     }
 
-    override fun getCameraTarget(): LatLng? {
-        return if (binding!!.map == null) null else mapFocus
+    override fun getCameraTarget(): LatLng {
+        return mapFocus
     }
 
     /**
@@ -2473,7 +2464,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 if (mediaResponse != null) {
                     // Create a Media object from the response
                     media = Media(
-                        pageId = mediaResponse.pageId ?: UUID.randomUUID().toString(),
+                        pageId = mediaResponse.pageId,
                         thumbUrl = mediaResponse.thumbUrl,
                         imageUrl = mediaResponse.imageUrl,
                         filename = mediaResponse.filename,
@@ -2485,10 +2476,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                         user = mediaResponse.user,
                         categories = mediaResponse.categories,
                         coordinates = mediaResponse.coordinates,
-                        captions = mediaResponse.captions ?: emptyMap(),
-                        descriptions = mediaResponse.descriptions ?: emptyMap(),
-                        depictionIds = mediaResponse.depictionIds ?: emptyList(),
-                        categoriesHiddenStatus = mediaResponse.categoriesHiddenStatus ?: emptyMap()
+                        captions = mediaResponse.captions,
+                        descriptions = mediaResponse.descriptions,
+                        depictionIds = mediaResponse.depictionIds,
+                        categoriesHiddenStatus = mediaResponse.categoriesHiddenStatus
                     )
                     // Remove existing fragment before showing new details
                     if (::mediaDetails.isInitialized && mediaDetails.isAdded) {
@@ -2531,7 +2522,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         }
     }
 
-    override fun getMediaAtPosition(i: Int): Media? {
+    override fun getMediaAtPosition(i: Int): Media {
         return media
     }
 
@@ -2590,7 +2581,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     override fun onWikidataEditSuccessful() {
-        if (presenter != null && locationManager != null) {
+        if (presenter != null) {
             presenter!!.updateMapAndList(LocationChangeType.MAP_UPDATED)
         }
     }
