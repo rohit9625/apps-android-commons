@@ -75,7 +75,6 @@ import fr.free.nrw.commons.location.LocationServiceManager.LocationChangeType
 import fr.free.nrw.commons.location.LocationUpdateListener
 import fr.free.nrw.commons.media.MediaClient
 import fr.free.nrw.commons.media.MediaDetailPagerFragment
-import fr.free.nrw.commons.media.MediaDetailPagerFragment.MediaDetailProvider
 import fr.free.nrw.commons.navtab.NavTab
 import fr.free.nrw.commons.nearby.BottomSheetAdapter
 import fr.free.nrw.commons.nearby.BottomSheetAdapter.ItemClickListener
@@ -138,7 +137,6 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
-import javax.sql.DataSource
 import kotlin.concurrent.Volatile
 
 
@@ -268,12 +266,12 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     private val galleryPickLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            controller?.handleActivityResultWithCallback(
+            controller.handleActivityResultWithCallback(
                 requireActivity(),
                 object : FilePicker.HandleActivityResult {
                     override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
                         // Handle the result from the gallery
-                        controller?.onPictureReturnedFromGallery(
+                        controller.onPictureReturnedFromGallery(
                             result,
                             requireActivity(),
                             callbacks
@@ -285,12 +283,12 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     private val customSelectorLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
-            controller?.handleActivityResultWithCallback(
+            controller.handleActivityResultWithCallback(
                 requireActivity(),
                 object : FilePicker.HandleActivityResult {
                     override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
                         if (result != null) {
-                            controller?.onPictureReturnedFromCustomSelector(
+                            controller.onPictureReturnedFromCustomSelector(
                                 result,
                                 requireActivity(),
                                 callbacks
@@ -303,12 +301,12 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     private val cameraPickLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
-            controller?.handleActivityResultWithCallback(
+            controller.handleActivityResultWithCallback(
                 requireActivity(),
                 object : FilePicker.HandleActivityResult {
                     override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
                         if (result != null) {
-                            controller?.onPictureReturnedFromCamera(
+                            controller.onPictureReturnedFromCamera(
                                 result,
                                 requireActivity(),
                                 callbacks
@@ -371,8 +369,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         initNetworkBroadCastReceiver()
         scope = viewLifecycleOwner.lifecycleScope
         presenter = NearbyParentFragmentPresenter(
-            bookmarkLocationDao!!,
-            placesRepository!!, nearbyController!!
+            bookmarkLocationDao,
+            placesRepository, nearbyController
         )
         progressDialog = ProgressDialog(activity)
         progressDialog!!.setCancelable(false)
@@ -446,16 +444,16 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 val areAllGranted = result.values.all { it }
 
                 if (areAllGranted) {
-                    controller?.locationPermissionCallback?.onLocationPermissionGranted()
+                    controller.locationPermissionCallback?.onLocationPermissionGranted()
                 } else {
                     if (shouldShowRequestPermissionRationale(permission.ACCESS_FINE_LOCATION)) {
-                        controller?.handleShowRationaleFlowCameraLocation(
+                        controller.handleShowRationaleFlowCameraLocation(
                             requireActivity(),
                             inAppCameraLocationPermissionLauncher,  // Reference it directly
                             cameraPickLauncherForResult
                         )
                     } else {
-                        controller?.locationPermissionCallback?.onLocationPermissionDenied(
+                        controller.locationPermissionCallback?.onLocationPermissionDenied(
                             getString(fr.free.nrw.commons.R.string.in_app_camera_location_permission_denied)
                         )
                     }
@@ -468,7 +466,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             binding?.rlContainerWlmMonthMessage?.visibility = View.GONE
         }
         locationPermissionsHelper =
-            locationManager?.let { LocationPermissionsHelper(requireActivity(), it, this) }
+            locationManager.let { LocationPermissionsHelper(requireActivity(), it, this) }
 
         // Set up the floating activity button to toggle the visibility of the legend
         binding?.fabLegend?.setOnClickListener {
@@ -496,8 +494,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         org.osmdroid.config.Configuration.getInstance().getAdditionalHttpRequestProperties()
             .put("Referer", "http://maps.wikimedia.org/")
 
-        if (applicationKvStore?.getString("LastLocation") != null) { // Checking for last searched location
-            val locationLatLng = applicationKvStore!!.getString("LastLocation")!!.split(",")
+        if (applicationKvStore.getString("LastLocation") != null) { // Checking for last searched location
+            val locationLatLng = applicationKvStore.getString("LastLocation")!!.split(",")
             lastMapFocus = GeoPoint(locationLatLng[0].toDouble(), locationLatLng[1].toDouble())
         } else {
             lastMapFocus = GeoPoint(51.50550, -0.07520)
@@ -699,7 +697,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     private fun performMapReadyActions() {
         if ((activity as MainActivity).activeFragment == ActiveFragment.NEARBY) {
-            if (applicationKvStore!!.getBoolean("doNotAskForLocationPermission", false) &&
+            if (applicationKvStore.getBoolean("doNotAskForLocationPermission", false) &&
                 !locationPermissionsHelper!!.checkLocationPermission(requireActivity())
             ) {
                 isPermissionDenied = true
@@ -765,9 +763,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      * "LastLocation" from applicationKvStore
      */
     private fun startMapWithoutPermission() {
-        if (applicationKvStore!!.getString("LastLocation") != null) {
+        if (applicationKvStore.getString("LastLocation") != null) {
             val locationLatLng =
-                applicationKvStore!!.getString("LastLocation")!!.split(",".toRegex())
+                applicationKvStore.getString("LastLocation")!!.split(",".toRegex())
                     .dropLastWhile { it.isEmpty() }.toTypedArray()
             lastKnownLocation = LatLng(
                 locationLatLng[0].toDouble(),
@@ -801,9 +799,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 requireContext().unregisterReceiver(broadcastReceiver)
             }
 
-            if (locationManager != null && presenter != null) {
-                locationManager!!.removeLocationListener(presenter!!)
-                locationManager!!.unregisterLocationManager()
+            if (presenter != null) {
+                locationManager.removeLocationListener(presenter!!)
+                locationManager.unregisterLocationManager()
             }
         } catch (e: Exception) {
             Timber.e(e)
@@ -1086,9 +1084,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      * @return returns the last location, if available, else returns default location
      */
     override fun getMapCenter(): LatLng {
-        if (applicationKvStore!!.getString("LastLocation") != null) {
+        if (applicationKvStore.getString("LastLocation") != null) {
             val locationLatLng =
-                applicationKvStore!!.getString("LastLocation")!!.split(",".toRegex())
+                applicationKvStore.getString("LastLocation")!!.split(",".toRegex())
                     .dropLastWhile { it.isEmpty() }.toTypedArray()
             lastKnownLocation = LatLng(
                 locationLatLng[0].toDouble(),
@@ -1322,7 +1320,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun emptyCache() {
         // reload the map once the cache is cleared
         compositeDisposable.add(
-            placesRepository!!.clearCache()
+            placesRepository.clearCache()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .andThen(Completable.fromAction {
@@ -1359,7 +1357,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun savePlacesAsKML() {
         val savePlacesObservable = Observable
             .fromCallable {
-                nearbyController?.getPlacesAsKML(mapFocus)
+                nearbyController.getPlacesAsKML(mapFocus)
             }
         compositeDisposable.add(
             savePlacesObservable
@@ -1403,7 +1401,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun savePlacesAsGPX() {
         val savePlacesObservable = Observable
             .fromCallable {
-                nearbyController?.getPlacesAsGPX(mapFocus)
+                nearbyController.getPlacesAsGPX(mapFocus)
             }
         compositeDisposable.add(
             savePlacesObservable
@@ -1516,7 +1514,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun getPlaceData(entity: String?, place: Place, marker: Marker, isBookMarked: Boolean) {
         val getPlaceObservable = Observable
             .fromCallable {
-                nearbyController?.getPlaces(java.util.List.of(place))
+                nearbyController.getPlaces(java.util.List.of(place))
             }
         compositeDisposable.add(
             getPlaceObservable
@@ -1568,7 +1566,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     ) {
         val nearbyPlacesInfoObservable = Observable
             .fromCallable {
-                nearbyController?.loadAttractionsFromLocation(
+                nearbyController.loadAttractionsFromLocation(
                     currentLatLng,
                     screenTopRight,
                     screenBottomLeft,
@@ -1621,7 +1619,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     ) {
         val nearbyPlacesInfoObservable = Observable
             .fromCallable {
-                nearbyController?.loadAttractionsFromLocation(
+                nearbyController.loadAttractionsFromLocation(
                     currentLatLng,
                     screenTopRight,
                     screenBottomLeft,
@@ -1645,7 +1643,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                             presenter!!.lockUnlockNearby(false)
                         } else {
                             // Updating last searched location
-                            applicationKvStore!!.putString(
+                            applicationKvStore.putString(
                                 "LastLocation",
                                 searchLatLng.latitude.toString() + "," + searchLatLng.longitude
                             )
@@ -1674,7 +1672,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     fun savePlaceToDatabase(place: Place?) {
-        placesRepository?.save(place)?.subscribeOn(Schedulers.io())?.subscribe()?.let {
+        placesRepository.save(place)?.subscribeOn(Schedulers.io())?.subscribe()?.let {
             compositeDisposable.add(
                 it
             )
@@ -1835,7 +1833,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     override fun displayLoginSkippedWarning() {
-        if (applicationKvStore!!.getBoolean("login_skipped", false)) {
+        if (applicationKvStore.getBoolean("login_skipped", false)) {
             // prompt the user to login
             AlertDialog.Builder(requireContext())
                 .setMessage(fr.free.nrw.commons.R.string.login_alert_message)
@@ -1951,7 +1949,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      */
     override fun addCurrentLocationMarker(currentLatLng: LatLng?) {
         if (null != currentLatLng && !isPermissionDenied
-            && locationManager!!.isGPSProviderEnabled()
+            && locationManager.isGPSProviderEnabled()
         ) {
             get().submit {
                 Timber.d("Adds current location marker")
@@ -2428,7 +2426,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 Timber.d("Camera button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
                 activity?.let {
-                    controller!!.initiateCameraPick(
+                    controller.initiateCameraPick(
                         it,
                         inAppCameraLocationPermissionLauncher,
                         cameraPickLauncherForResult
@@ -2442,7 +2440,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 Timber.d("Gallery button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
                 activity?.let {
-                    controller!!.initiateGalleryPick(
+                    controller.initiateGalleryPick(
                         it,
                         galleryPickLauncherForResult,
                         false
@@ -2456,7 +2454,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 Timber.d("Gallery button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
                 activity?.let {
-                    controller!!.initiateCustomGalleryPickWithPermission(
+                    controller.initiateCustomGalleryPickWithPermission(
                         it,
                         customSelectorLauncherForResult
                     )
@@ -2561,9 +2559,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     private fun storeSharedPrefs(selectedPlace: Place) {
-        applicationKvStore!!.putJson<Place>(WikidataConstants.PLACE_OBJECT, selectedPlace)
+        applicationKvStore.putJson<Place>(WikidataConstants.PLACE_OBJECT, selectedPlace)
         val place =
-            applicationKvStore!!.getJson<Place>(WikidataConstants.PLACE_OBJECT, Place::class.java)
+            applicationKvStore.getJson<Place>(WikidataConstants.PLACE_OBJECT, Place::class.java)
 
         Timber.d("Stored place object %s", place.toString())
     }
@@ -2583,12 +2581,12 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        wikidataEditListener!!.authenticationStateListener = this
+        wikidataEditListener.authenticationStateListener = this
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        wikidataEditListener!!.authenticationStateListener = null
+        wikidataEditListener.authenticationStateListener = null
     }
 
     override fun onWikidataEditSuccessful() {
@@ -2605,12 +2603,12 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     fun registerUnregisterLocationListener(removeLocationListener: Boolean) {
         try {
             if (removeLocationListener) {
-                locationManager!!.unregisterLocationManager()
-                locationManager!!.removeLocationListener(this)
+                locationManager.unregisterLocationManager()
+                locationManager.removeLocationListener(this)
                 Timber.d("Location service manager unregistered and removed")
             } else {
-                locationManager!!.addLocationListener(this)
-                locationManager!!.registerLocationManager()
+                locationManager.addLocationListener(this)
+                locationManager.registerLocationManager()
                 Timber.d("Location service manager added and registered")
             }
         } catch (e: Exception) {
