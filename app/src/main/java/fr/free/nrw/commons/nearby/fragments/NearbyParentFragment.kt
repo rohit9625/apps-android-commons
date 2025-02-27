@@ -35,7 +35,6 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -67,7 +66,6 @@ import fr.free.nrw.commons.contributions.MainActivity
 import fr.free.nrw.commons.contributions.MainActivity.ActiveFragment
 import fr.free.nrw.commons.databinding.FragmentNearbyParentBinding
 import fr.free.nrw.commons.di.CommonsDaggerSupportFragment
-import fr.free.nrw.commons.filepicker.FilePicker
 import fr.free.nrw.commons.kvstore.JsonKvStore
 import fr.free.nrw.commons.location.LatLng
 import fr.free.nrw.commons.location.LocationPermissionsHelper
@@ -398,7 +396,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             false
         }
 
-        showInExploreButton.setOnMenuItemClickListener { item ->
+        showInExploreButton.setOnMenuItemClickListener { _ ->
             (context as MainActivity).loadExploreMapFromNearby(
                 binding?.map?.zoomLevelDouble ?: 0.0,  // Using safe calls to avoid NPE
                 binding?.map?.mapCenter?.latitude ?: 0.0,
@@ -460,7 +458,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             binding?.rlContainerWlmMonthMessage?.visibility = View.GONE
         }
         locationPermissionsHelper =
-            locationManager.let { LocationPermissionsHelper(requireActivity(), it, this) }
+            LocationPermissionsHelper(requireActivity(), locationManager, this)
 
         // Set up the floating activity button to toggle the visibility of the legend
         binding?.fabLegend?.setOnClickListener {
@@ -485,10 +483,11 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         binding?.map?.setTilesScaledToDpi(true)
 
         // Add referer HTTP header because the Wikimedia tile server requires it.
-        org.osmdroid.config.Configuration.getInstance().getAdditionalHttpRequestProperties()
-            .put("Referer", "http://maps.wikimedia.org/")
+        org.osmdroid.config.Configuration.getInstance()
+            .additionalHttpRequestProperties["Referer"] = "http://maps.wikimedia.org/"
 
-        if (applicationKvStore.getString("LastLocation") != null) { // Checking for last searched location
+        if (applicationKvStore.getString("LastLocation") != null) {
+            // Checking for last searched location
             val locationLatLng = applicationKvStore.getString("LastLocation")!!.split(",")
             lastMapFocus = GeoPoint(locationLatLng[0].toDouble(), locationLatLng[1].toDouble())
         } else {
@@ -503,7 +502,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         scaleBarOverlay.setBackgroundPaint(barPaint)
         scaleBarOverlay.enableScaleBar()
         binding?.map?.overlays?.add(scaleBarOverlay)
-        binding?.map?.getZoomController()
+        binding?.map?.zoomController
             ?.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
         binding?.map?.controller?.setZoom(ZOOM_LEVEL)
 
@@ -515,7 +514,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 1L
             )
         }
-        binding?.map?.getOverlays()?.add(mapEventsOverlay)
+        binding?.map?.overlays?.add(mapEventsOverlay)
 
         binding?.map?.addMapListener(object : MapListener {
             override fun onScroll(event: ScrollEvent): Boolean {
@@ -866,7 +865,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     fun initNearbyFilter() {
         binding!!.nearbyFilterList.root.visibility = View.GONE
         hideBottomSheet()
-        binding!!.nearbyFilter.searchViewLayout.searchView.setOnQueryTextFocusChangeListener { v, hasFocus ->
+        binding!!.nearbyFilter.searchViewLayout.searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
             setLayoutHeightAlignedToWidth(
                 1.25,
                 binding!!.nearbyFilterList.root
@@ -940,7 +939,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         if (NearbyController.currentLocation != null) {
             presenter!!.filterByMarkerType(
                 nearbyFilterSearchRecyclerViewAdapter!!.selectedLabels,
-                binding!!.nearbyFilterList.checkboxTriStates.state, true, false
+                binding!!.nearbyFilterList.checkboxTriStates.state,
+                filterForPlaceState = true,
+                filterForAllNoneType = false
             )
         }
     }
@@ -958,7 +959,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         })
 
-        binding!!.bottomSheetDetails.root.setOnClickListener { v ->
+        binding!!.bottomSheetDetails.root.setOnClickListener { _ ->
             if (bottomSheetDetailsBehavior!!.state == BottomSheetBehavior.STATE_COLLAPSED) {
                 bottomSheetDetailsBehavior!!.setState(BottomSheetBehavior.STATE_EXPANDED)
             } else if (bottomSheetDetailsBehavior!!.state
@@ -1001,7 +1002,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      *
      */
     private fun addActionToTitle() {
-        binding!!.bottomSheetDetails.title.setOnLongClickListener { view ->
+        binding!!.bottomSheetDetails.title.setOnLongClickListener { _ ->
             Utils.copy(
                 "place", binding!!.bottomSheetDetails.title.text.toString(),
                 context
@@ -1011,7 +1012,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             true
         }
 
-        binding!!.bottomSheetDetails.title.setOnClickListener { view ->
+        binding!!.bottomSheetDetails.title.setOnClickListener { _ ->
             bottomSheetListBehavior!!.state = BottomSheetBehavior.STATE_HIDDEN
             if (bottomSheetDetailsBehavior!!.state == BottomSheetBehavior.STATE_COLLAPSED) {
                 bottomSheetDetailsBehavior!!.setState(BottomSheetBehavior.STATE_EXPANDED)
@@ -1240,10 +1241,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 eastCornerLat,
                 eastCornerLong, 0f
             )
-            if (currentLatLng.equals(
-                    getLastMapFocus()
-                )
-            ) { // Means we are checking around current location
+            if (currentLatLng == getLastMapFocus()) {
+                // Means we are checking around current location
                 populatePlacesForCurrentLocation(
                     mapFocus, screenTopRightLatLng,
                     screenBottomLeftLatLng, currentLatLng, null
@@ -1255,10 +1254,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 )
             }
         } else {
-            if (currentLatLng.equals(
-                    getLastMapFocus()
-                )
-            ) { // Means we are checking around current location
+            if (currentLatLng == getLastMapFocus()) {
+                // Means we are checking around current location
                 populatePlacesForCurrentLocation(
                     mapFocus, screenTopRightLatLng,
                     screenBottomLeftLatLng, currentLatLng, null
@@ -1280,7 +1277,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         currentLatLng: LatLng,
         customQuery: String?
     ) {
-        if (customQuery == null || customQuery.isEmpty()) {
+        if (customQuery.isNullOrEmpty()) {
             populatePlaces(currentLatLng)
             return
         }
@@ -1289,7 +1286,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         val screenTopRightLatLng = screenBottomLeft
         val screenBottomLeftLatLng = screenTopRight
 
-        if (currentLatLng.equals(lastFocusLocation) || lastFocusLocation == null || recenterToUserLocation) { // Means we are checking around current location
+        if (currentLatLng == lastFocusLocation || lastFocusLocation == null || recenterToUserLocation) {
+            // Means we are checking around current location
             populatePlacesForCurrentLocation(
                 lastKnownLocation, screenTopRightLatLng,
                 screenBottomLeftLatLng, currentLatLng, customQuery
@@ -1506,7 +1504,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun getPlaceData(entity: String?, place: Place, marker: Marker, isBookMarked: Boolean) {
         val getPlaceObservable = Observable
             .fromCallable {
-                nearbyController.getPlaces(java.util.List.of(place))
+                nearbyController.getPlaces(listOf(place))
             }
         compositeDisposable.add(
             getPlaceObservable
@@ -1588,17 +1586,17 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                                 searchLatLng.longitude
                             )
                         }
-                    } as ((NearbyPlacesInfo?) -> Unit)?,
-                    { throwable: Throwable ->
-                        Timber.d(throwable)
-                        showErrorMessage(
-                            getString(R.string.error_fetching_nearby_places)
+                    } as ((NearbyPlacesInfo?) -> Unit)?
+                ) { throwable: Throwable ->
+                    Timber.d(throwable)
+                    showErrorMessage(
+                        getString(R.string.error_fetching_nearby_places)
                                 + throwable.localizedMessage
-                        )
-                        setProgressBarVisibility(false)
-                        presenter!!.lockUnlockNearby(false)
-                        setFilterState()
-                    })
+                    )
+                    setProgressBarVisibility(false)
+                    presenter!!.lockUnlockNearby(false)
+                    setFilterState()
+                }
         )
     }
 
@@ -1649,17 +1647,17 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                             )
                             stopQuery()
                         }
-                    } as ((NearbyPlacesInfo?) -> Unit)?,
-                    { throwable: Throwable ->
-                        Timber.e(throwable)
-                        showErrorMessage(
-                            getString(R.string.error_fetching_nearby_places)
+                    } as ((NearbyPlacesInfo?) -> Unit)?
+                ) { throwable: Throwable ->
+                    Timber.e(throwable)
+                    showErrorMessage(
+                        getString(R.string.error_fetching_nearby_places)
                                 + throwable.localizedMessage
-                        )
-                        setProgressBarVisibility(false)
-                        presenter!!.lockUnlockNearby(false)
-                        setFilterState()
-                    })
+                    )
+                    setProgressBarVisibility(false)
+                    presenter!!.lockUnlockNearby(false)
+                    setFilterState()
+                }
         )
     }
 
@@ -1830,8 +1828,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             AlertDialog.Builder(requireContext())
                 .setMessage(R.string.login_alert_message)
                 .setCancelable(false)
-                .setNegativeButton(R.string.cancel) { dialog, which -> }
-                .setPositiveButton(R.string.login) { dialog, which ->
+                .setNegativeButton(R.string.cancel) { _, _ -> }
+                .setPositiveButton(R.string.login) { _, _ ->
                     // logout of the app
                     val logoutListener =
                         CommonsApplication.BaseLogoutListener(
@@ -2055,7 +2053,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         if (place.isMonument) {
             return R.drawable.ic_custom_map_marker_monuments
         }
-        if (!place.pic.trim { it <= ' ' }.isEmpty()) {
+        if (place.pic.trim { it <= ' ' }.isNotEmpty()) {
             return (if (isBookmarked) R.drawable.ic_custom_map_marker_green_bookmarked else R.drawable.ic_custom_map_marker_green
                 )
         }
@@ -2115,7 +2113,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         marker.textLabelFontSize = 40
         // anchorV is 21.707/28.0 as icon height is 28dp while the pin base is at 21.707dp from top
         marker.setAnchor(Marker.ANCHOR_CENTER, 0.77525f)
-        marker.setOnMarkerClickListener { marker1: Marker, mapView: MapView? ->
+        marker.setOnMarkerClickListener { marker1: Marker, _: MapView? ->
             if (clickedMarker != null) {
                 clickedMarker!!.closeInfoWindow()
             }
@@ -2270,7 +2268,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
             (BottomSheetBehavior.STATE_HIDDEN) -> {
                 binding!!.transparentView.isClickable = false
-                binding!!.transparentView.setAlpha(0F)
+                binding!!.transparentView.alpha = 0F
                 collapseFABs(isFABsExpanded)
                 hideFABs()
             }
@@ -2406,7 +2404,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         // Set the short description after we remove place name from long description
         binding!!.bottomSheetDetails.description.text = descriptionText
 
-        binding!!.fabCamera.setOnClickListener { view ->
+        binding!!.fabCamera.setOnClickListener { _ ->
             if (binding!!.fabCamera.isShown) {
                 Timber.d("Camera button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
@@ -2420,7 +2418,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         }
 
-        binding!!.fabGallery.setOnClickListener { view ->
+        binding!!.fabGallery.setOnClickListener { _ ->
             if (binding!!.fabGallery.isShown) {
                 Timber.d("Gallery button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
@@ -2434,7 +2432,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         }
 
-        binding!!.fabCustomGallery.setOnClickListener { view ->
+        binding!!.fabCustomGallery.setOnClickListener { _ ->
             if (binding!!.fabCustomGallery.isShown) {
                 Timber.d("Gallery button tapped. Place: %s", selectedPlace.toString())
                 storeSharedPrefs(selectedPlace!!)
@@ -2529,7 +2527,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     override fun refreshNominatedMedia(index: Int) {
-        if (this::mediaDetails.isInitialized && !binding?.map?.isClickable!! == true) {
+        if (::mediaDetails.isInitialized && !binding?.map?.isClickable!!) {
             removeFragment(mediaDetails)
             showMediaDetails()
         }
