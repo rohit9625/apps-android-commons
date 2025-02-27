@@ -19,7 +19,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
-import android.preference.PreferenceManager
+import androidx.preference.PreferenceManager
 import android.provider.Settings
 import android.text.Html
 import android.text.method.LinkMovementMethod
@@ -31,7 +31,6 @@ import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
@@ -276,33 +275,29 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
 
 
     private val customSelectorLauncherForResult =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             controller.handleActivityResultWithCallback(
                 requireActivity()
             ) { callbacks ->
-                if (result != null) {
-                    controller.onPictureReturnedFromCustomSelector(
-                        result,
-                        requireActivity(),
-                        callbacks
-                    )
-                }
+                controller.onPictureReturnedFromCustomSelector(
+                    result,
+                    requireActivity(),
+                    callbacks
+                )
             }
         }
 
 
     private val cameraPickLauncherForResult =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             controller.handleActivityResultWithCallback(
                 requireActivity()
             ) { callbacks ->
-                if (result != null) {
-                    controller.onPictureReturnedFromCamera(
-                        result,
-                        requireActivity(),
-                        callbacks
-                    )
-                }
+                controller.onPictureReturnedFromCamera(
+                    result,
+                    requireActivity(),
+                    callbacks
+                )
             }
         }
 
@@ -714,7 +709,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             locationManager.requestLocationUpdatesFromProvider(LocationManager.GPS_PROVIDER)
             setProgressBarVisibility(true)
         } else {
-            activity?.let { locationPermissionsHelper?.showLocationOffDialog(it, R.string.ask_to_turn_location_on_text) }
+            activity?.let {
+                locationPermissionsHelper
+                ?.showLocationOffDialog(it, R.string.ask_to_turn_location_on_text)
+            }
         }
 
         presenter?.onMapReady()
@@ -789,7 +787,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         } catch (e: Exception) {
             Timber.e(e)
-            //Broadcast receivers should always be unregistered inside catch, you never know if they were already registered or not
+            //Broadcast receivers should always be unregistered inside catch,
+            // you never know if they were already registered or not
         }
     }
 
@@ -1218,7 +1217,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         // Note: This only happens when the nearby fragment is opened immediately upon app launch,
         // otherwise {screenTopRightLatLng} and {screenBottomLeftLatLng} are used to determine
         // the east and west corner LatLng.
-        if (screenTopRightLatLng.latitude == 0.0 && screenTopRightLatLng.longitude == 0.0 && screenBottomLeftLatLng.latitude == 0.0 && screenBottomLeftLatLng.longitude == 0.0) {
+        if (screenTopRightLatLng.latitude == 0.0 && screenTopRightLatLng.longitude == 0.0 &&
+            screenBottomLeftLatLng.latitude == 0.0 && screenBottomLeftLatLng.longitude == 0.0
+        ) {
             val delta = 0.009
             val westCornerLat = currentLatLng.latitude - delta
             val westCornerLong = currentLatLng.longitude - delta
@@ -1577,7 +1578,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                                 searchLatLng.longitude
                             )
                         }
-                    } as? ((NearbyPlacesInfo?) -> Unit)?
+                    }
                 ) { throwable: Throwable ->
                     Timber.d(throwable)
                     showErrorMessage(
@@ -1638,7 +1639,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                             )
                             stopQuery()
                         }
-                    } as ((NearbyPlacesInfo?) -> Unit)?
+                    }
                 ) { throwable: Throwable ->
                     Timber.e(throwable)
                     showErrorMessage(
@@ -2044,32 +2045,32 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         }
 
-        if (place.isMonument) {
-            return R.drawable.ic_custom_map_marker_monuments
-        }
-        if (place.pic.trim { it <= ' ' }.isNotEmpty()) {
-            return if (isBookmarked) {
+        return when {
+            place.isMonument -> R.drawable.ic_custom_map_marker_monuments
+
+            place.pic.trim { it <= ' ' }.isNotEmpty() -> if (isBookmarked) {
                 R.drawable.ic_custom_map_marker_green_bookmarked
             } else {
                 R.drawable.ic_custom_map_marker_green
             }
-        }
-        if (!place.exists) {
-            // Means that the topic of the Wikidata item does not exist in the real world anymore,
-            // for instance it is a past event, or a place that was destroyed
-            return R.drawable.ic_clear_black_24dp
-        }
-        if (place.name.isEmpty()) {
-            return if (isBookmarked) {
+
+            !place.exists -> {
+                // Means that the topic of the Wikidata item does not exist in real world anymore
+                // for instance it is a past event, or a place that was destroyed
+                R.drawable.ic_clear_black_24dp
+            }
+
+            place.name.isEmpty() -> if (isBookmarked) {
                 R.drawable.ic_custom_map_marker_grey_bookmarked
             } else {
                 R.drawable.ic_custom_map_marker_grey
             }
-        }
-        return if (isBookmarked) {
-            R.drawable.ic_custom_map_marker_red_bookmarked
-        } else {
-            R.drawable.ic_custom_map_marker_red
+
+            else -> if (isBookmarked) {
+                R.drawable.ic_custom_map_marker_red_bookmarked
+            } else {
+                R.drawable.ic_custom_map_marker_red
+            }
         }
     }
 
@@ -2384,7 +2385,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 })
                 .into(binding!!.bottomSheetDetails.icon)
 
-            if (binding!!.bottomSheetDetails.icon.drawable != null && binding!!.bottomSheetDetails.icon.drawable.constantState == loadingDrawable?.constantState) {
+            if (binding!!.bottomSheetDetails.icon.drawable != null
+                && binding!!.bottomSheetDetails.icon.drawable.constantState == loadingDrawable?.constantState) {
                 binding!!.bottomSheetDetails.icon.startAnimation(animation)
             } else {
                 binding!!.bottomSheetDetails.icon.clearAnimation()
