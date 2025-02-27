@@ -35,11 +35,13 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -266,53 +268,46 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private val galleryPickLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             controller.handleActivityResultWithCallback(
-                requireActivity(),
-                object : FilePicker.HandleActivityResult {
-                    override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
-                        // Handle the result from the gallery
-                        controller.onPictureReturnedFromGallery(
-                            result,
-                            requireActivity(),
-                            callbacks
-                        )
-                    }
-                })
+                requireActivity()
+            ) { callbacks -> // Handle the result from the gallery
+                controller.onPictureReturnedFromGallery(
+                    result,
+                    requireActivity(),
+                    callbacks
+                )
+            }
         }
 
 
     private val customSelectorLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
             controller.handleActivityResultWithCallback(
-                requireActivity(),
-                object : FilePicker.HandleActivityResult {
-                    override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
-                        if (result != null) {
-                            controller.onPictureReturnedFromCustomSelector(
-                                result,
-                                requireActivity(),
-                                callbacks
-                            )
-                        }
-                    }
-                })
+                requireActivity()
+            ) { callbacks ->
+                if (result != null) {
+                    controller.onPictureReturnedFromCustomSelector(
+                        result,
+                        requireActivity(),
+                        callbacks
+                    )
+                }
+            }
         }
 
 
     private val cameraPickLauncherForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult? ->
             controller.handleActivityResultWithCallback(
-                requireActivity(),
-                object : FilePicker.HandleActivityResult {
-                    override fun onHandleActivityResult(callbacks: FilePicker.Callbacks) {
-                        if (result != null) {
-                            controller.onPictureReturnedFromCamera(
-                                result,
-                                requireActivity(),
-                                callbacks
-                            )
-                        }
-                    }
-                })
+                requireActivity()
+            ) { callbacks ->
+                if (result != null) {
+                    controller.onPictureReturnedFromCamera(
+                        result,
+                        requireActivity(),
+                        callbacks
+                    )
+                }
+            }
         }
 
 
@@ -954,7 +949,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      * Defines how bottom sheets will act on click
      */
     private fun setBottomSheetCallbacks() {
-        bottomSheetDetailsBehavior!!.setBottomSheetCallback(object : BottomSheetCallback() {
+        bottomSheetDetailsBehavior!!.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 prepareViewsForSheetPosition(newState)
             }
@@ -974,12 +969,11 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         }
 
         binding!!.bottomSheetNearby.bottomSheet.layoutParams.height =
-            requireActivity().windowManager
-                .defaultDisplay.height / 16 * 9
+            getWindowHeight(requireActivity()) / 16 * 9
         bottomSheetListBehavior =
             BottomSheetBehavior.from<View>(binding!!.bottomSheetNearby.bottomSheet)
         bottomSheetListBehavior?.setState(BottomSheetBehavior.STATE_COLLAPSED)
-        bottomSheetListBehavior?.setBottomSheetCallback(object : BottomSheetCallback() {
+        bottomSheetListBehavior?.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     bottomSheetDetailsBehavior!!.state = BottomSheetBehavior.STATE_HIDDEN
@@ -2550,9 +2544,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     private fun storeSharedPrefs(selectedPlace: Place) {
-        applicationKvStore.putJson<Place>(WikidataConstants.PLACE_OBJECT, selectedPlace)
-        val place =
-            applicationKvStore.getJson<Place>(WikidataConstants.PLACE_OBJECT, Place::class.java)
+        applicationKvStore.putJson(WikidataConstants.PLACE_OBJECT, selectedPlace)
+        val place = applicationKvStore.getJson<Place>(WikidataConstants.PLACE_OBJECT)
 
         Timber.d("Stored place object %s", place.toString())
     }
@@ -2826,12 +2819,20 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         val rlBottomSheetLayoutParams = binding!!.bottomSheetNearby.bottomSheet.layoutParams
-        rlBottomSheetLayoutParams.height =
-            requireActivity().windowManager.defaultDisplay.height / 16 * 9
+        rlBottomSheetLayoutParams.height = getWindowHeight(requireActivity()) / 16 * 9
+
         binding!!.bottomSheetNearby.bottomSheet.layoutParams = rlBottomSheetLayoutParams
         val spanCount = spanCount
         if (gridLayoutManager != null) {
             gridLayoutManager!!.spanCount = spanCount
+        }
+    }
+
+    private fun getWindowHeight(activity: FragmentActivity): Int {
+        return if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.windowManager.currentWindowMetrics.bounds.height()
+        } else {
+            activity.windowManager.defaultDisplay.height
         }
     }
 
