@@ -148,7 +148,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     MediaDetailPagerFragment.MediaDetailProvider {
     var binding: FragmentNearbyParentBinding? = null
 
-    val mapEventsOverlay: MapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
+    private val mapEventsOverlay: MapEventsOverlay = MapEventsOverlay(object : MapEventsReceiver {
         override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
             if (clickedMarker != null) {
                 clickedMarker!!.closeInfoWindow()
@@ -209,11 +209,11 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private var nearbyFilterSearchRecyclerViewAdapter: NearbyFilterSearchRecyclerViewAdapter? = null
     private var bottomSheetListBehavior: BottomSheetBehavior<*>? = null
     private var bottomSheetDetailsBehavior: BottomSheetBehavior<*>? = null
-    private var rotate_backward: Animation? = null
-    private var fab_close: Animation? = null
-    private var fab_open: Animation? = null
-    private var rotate_forward: Animation? = null
-    private val NETWORK_INTENT_ACTION = "android.net.conn.CONNECTIVITY_CHANGE"
+    private var rotateBackward: Animation? = null
+    private var fabClose: Animation? = null
+    private var fabOpen: Animation? = null
+    private var rotateForward: Animation? = null
+    private val networkIntentAction = "android.net.conn.CONNECTIVITY_CHANGE"
     private var broadcastReceiver: BroadcastReceiver? = null
     private var isNetworkErrorOccurred = false
     private var snackbar: Snackbar? = null
@@ -225,12 +225,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private var selectedPlace: Place? = null
     private var clickedMarker: Marker? = null
     private var progressDialog: ProgressDialog? = null
-    private val CAMERA_TARGET_SHIFT_FACTOR_PORTRAIT = 0.005
-    private val CAMERA_TARGET_SHIFT_FACTOR_LANDSCAPE = 0.004
     private var isPermissionDenied = false
     private var recenterToUserLocation = false
     private var mapCenter: GeoPoint? = null
-    var intentFilter: IntentFilter = IntentFilter(NETWORK_INTENT_ACTION)
+    private var intentFilter: IntentFilter = IntentFilter(networkIntentAction)
     private var lastPlaceToCenter: Place? = null
     private var lastKnownLocation: LatLng? = null
     private var isVisibleToUser = false
@@ -341,13 +339,6 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 }
             }
         }
-
-    /**
-     * WLM URL
-     */
-    val WLM_URL =
-        "https://commons.wikimedia.org/wiki/Commons:Mobile_app/Contributing_to_WLM_using_the_app"
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -598,7 +589,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     /**
      * Fetch Explore map camera data from fragment arguments if any.
      */
-    fun loadExploreMapData() {
+    private fun loadExploreMapData() {
         // get fragment arguments
         if (arguments != null) {
             prevZoom = requireArguments().getDouble("prev_zoom")
@@ -613,7 +604,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      *
      * @return true if user navigated from Explore map
      */
-    fun isCameFromExploreMap(): Boolean {
+    private fun isCameFromExploreMap(): Boolean {
         return prevZoom != 0.0 || prevLatitude != 0.0 || prevLongitude != 0.0
     }
 
@@ -862,7 +853,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         }
 
-    fun initNearbyFilter() {
+    private fun initNearbyFilter() {
         binding!!.nearbyFilterList.root.visibility = View.GONE
         hideBottomSheet()
         binding!!.nearbyFilter.searchViewLayout.searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
@@ -990,11 +981,11 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      * Loads animations will be used for FABs
      */
     private fun loadAnimations() {
-        fab_open = AnimationUtils.loadAnimation(activity, R.anim.fab_open)
-        fab_close = AnimationUtils.loadAnimation(activity, R.anim.fab_close)
-        rotate_forward =
+        fabOpen = AnimationUtils.loadAnimation(activity, R.anim.fab_open)
+        fabClose = AnimationUtils.loadAnimation(activity, R.anim.fab_close)
+        rotateForward =
             AnimationUtils.loadAnimation(activity, R.anim.rotate_forward)
-        rotate_backward =
+        rotateBackward =
             AnimationUtils.loadAnimation(activity, R.anim.rotate_backward)
     }
 
@@ -1091,13 +1082,13 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                 -0.07520, 1f
             )
         }
-        var latLnge = lastKnownLocation!!
+        var latLng = lastKnownLocation!!
         if (mapCenter != null) {
-            latLnge = LatLng(
+            latLng = LatLng(
                 mapCenter!!.latitude, mapCenter!!.longitude, 100f
             )
         }
-        return latLnge
+        return latLng
     }
 
     override fun getMapFocus(): LatLng {
@@ -1432,7 +1423,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         )
     }
 
-    fun saveFile(string: String, fileName: String?): Boolean {
+    private fun saveFile(string: String, fileName: String?): Boolean {
         if (!isExternalStorageWritable) {
             return false
         }
@@ -1586,7 +1577,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
                                 searchLatLng.longitude
                             )
                         }
-                    } as ((NearbyPlacesInfo?) -> Unit)?
+                    } as? ((NearbyPlacesInfo?) -> Unit)?
                 ) { throwable: Throwable ->
                     Timber.d(throwable)
                     showErrorMessage(
@@ -1661,7 +1652,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         )
     }
 
-    fun savePlaceToDatabase(place: Place?) {
+    private fun savePlaceToDatabase(place: Place?) {
         placesRepository.save(place)?.subscribeOn(Schedulers.io())?.subscribe()?.let {
             compositeDisposable.add(
                 it
@@ -1744,9 +1735,9 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     override fun animateFABs() {
         if (binding!!.fabPlus.isShown) {
             if (isFABsExpanded) {
-                collapseFABs(isFABsExpanded)
+                collapseFABs(true)
             } else {
-                expandFABs(isFABsExpanded)
+                expandFABs(false)
             }
         }
     }
@@ -1779,10 +1770,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun expandFABs(isFABsExpanded: Boolean) {
         if (!isFABsExpanded) {
             showFABs()
-            binding!!.fabPlus.startAnimation(rotate_forward)
-            binding!!.fabCamera.startAnimation(fab_open)
-            binding!!.fabGallery.startAnimation(fab_open)
-            binding!!.fabCustomGallery.startAnimation(fab_open)
+            binding!!.fabPlus.startAnimation(rotateForward)
+            binding!!.fabCamera.startAnimation(fabOpen)
+            binding!!.fabGallery.startAnimation(fabOpen)
+            binding!!.fabCustomGallery.startAnimation(fabOpen)
             binding!!.fabCustomGallery.show()
             binding!!.fabCamera.show()
             binding!!.fabGallery.show()
@@ -1791,7 +1782,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     /**
-     * Hides all fabs
+     * Hides all FABs
      */
     private fun hideFABs() {
         removeAnchorFromFAB(binding!!.fabPlus)
@@ -1811,10 +1802,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
      */
     private fun collapseFABs(isFABsExpanded: Boolean) {
         if (isFABsExpanded) {
-            binding!!.fabPlus.startAnimation(rotate_backward)
-            binding!!.fabCamera.startAnimation(fab_close)
-            binding!!.fabGallery.startAnimation(fab_close)
-            binding!!.fabCustomGallery.startAnimation(fab_close)
+            binding!!.fabPlus.startAnimation(rotateBackward)
+            binding!!.fabCamera.startAnimation(fabClose)
+            binding!!.fabGallery.startAnimation(fabClose)
+            binding!!.fabCustomGallery.startAnimation(fabClose)
             binding!!.fabCustomGallery.hide()
             binding!!.fabCamera.hide()
             binding!!.fabGallery.hide()
@@ -2037,7 +2028,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     /**
      * Returns drawable of marker icon for given place
      *
-     * @param place        where marker is to be added
+     * @param place where marker is to be added
      * @param isBookmarked true if place is bookmarked
      * @return returns the drawable of marker according to the place information
      */
@@ -2045,27 +2036,41 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     private fun getIconFor(place: Place, isBookmarked: Boolean): Int {
         if (nearestPlace != null && place.name == nearestPlace!!.name) {
             // Highlight nearest place only when user clicks on the home nearby banner
-//            highlightNearestPlace(place);
-            return (if (isBookmarked) R.drawable.ic_custom_map_marker_purple_bookmarked else R.drawable.ic_custom_map_marker_purple
-                )
+            // highlightNearestPlace(place);
+            return if (isBookmarked) {
+                R.drawable.ic_custom_map_marker_purple_bookmarked
+            } else {
+                R.drawable.ic_custom_map_marker_purple
+            }
         }
 
         if (place.isMonument) {
             return R.drawable.ic_custom_map_marker_monuments
         }
         if (place.pic.trim { it <= ' ' }.isNotEmpty()) {
-            return (if (isBookmarked) R.drawable.ic_custom_map_marker_green_bookmarked else R.drawable.ic_custom_map_marker_green
-                )
+            return if (isBookmarked) {
+                R.drawable.ic_custom_map_marker_green_bookmarked
+            } else {
+                R.drawable.ic_custom_map_marker_green
+            }
         }
-        if (!place.exists) { // Means that the topic of the Wikidata item does not exist in the real world anymore, for instance it is a past event, or a place that was destroyed
-            return (R.drawable.ic_clear_black_24dp)
+        if (!place.exists) {
+            // Means that the topic of the Wikidata item does not exist in the real world anymore,
+            // for instance it is a past event, or a place that was destroyed
+            return R.drawable.ic_clear_black_24dp
         }
         if (place.name.isEmpty()) {
-            return (if (isBookmarked) R.drawable.ic_custom_map_marker_grey_bookmarked else R.drawable.ic_custom_map_marker_grey
-                )
+            return if (isBookmarked) {
+                R.drawable.ic_custom_map_marker_grey_bookmarked
+            } else {
+                R.drawable.ic_custom_map_marker_grey
+            }
         }
-        return (if (isBookmarked) R.drawable.ic_custom_map_marker_red_bookmarked else R.drawable.ic_custom_map_marker_red
-            )
+        return if (isBookmarked) {
+            R.drawable.ic_custom_map_marker_red_bookmarked
+        } else {
+            R.drawable.ic_custom_map_marker_red
+        }
     }
 
     /**
@@ -2095,7 +2100,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         return drawableCache!![key]
     }
 
-    fun convertToMarker(place: Place, isBookMarked: Boolean): Marker {
+    private fun convertToMarker(place: Place, isBookMarked: Boolean): Marker {
         val icon = getDrawable(requireContext(), getIconFor(place, isBookMarked))
         val point = GeoPoint(place.location.latitude, place.location.longitude)
         val marker = Marker(binding!!.map)
@@ -2198,13 +2203,13 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
          * Ref: https://github.com/commons-app/apps-android-commons/pull/5494#discussion_r1560404794
          */
         if (lastMapFocus != null) {
-            val mylocation = Location("")
-            val dest_location = Location("")
-            dest_location.latitude = binding!!.map.mapCenter.latitude
-            dest_location.longitude = binding!!.map.mapCenter.longitude
-            mylocation.latitude = lastMapFocus!!.latitude
-            mylocation.longitude = lastMapFocus!!.longitude
-            val distance = mylocation.distanceTo(dest_location) //in meters
+            val myLocation = Location("")
+            val destLocation = Location("")
+            destLocation.latitude = binding!!.map.mapCenter.latitude
+            destLocation.longitude = binding!!.map.mapCenter.longitude
+            myLocation.latitude = lastMapFocus!!.latitude
+            myLocation.longitude = lastMapFocus!!.longitude
+            val distance = myLocation.distanceTo(destLocation) //in meters
             if (lastMapFocus != null) {
                 if (isNetworkConnectionEstablished) {
                     searchable = if (distance > 2000.0) {
@@ -2253,7 +2258,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     /**
      * If nearby details bottom sheet state is collapsed: show fab plus If nearby details bottom
      * sheet state is expanded: show fab plus If nearby details bottom sheet state is hidden: hide
-     * all fabs
+     * all FABs
      *
      * @param bottomSheetState see bottom sheet states
      */
@@ -2452,38 +2457,40 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
         mediaClient.getMedia("File:$decodedImageName")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ mediaResponse ->
-                if (mediaResponse != null) {
-                    // Create a Media object from the response
-                    media = Media(
-                        pageId = mediaResponse.pageId,
-                        thumbUrl = mediaResponse.thumbUrl,
-                        imageUrl = mediaResponse.imageUrl,
-                        filename = mediaResponse.filename,
-                        fallbackDescription = mediaResponse.fallbackDescription,
-                        dateUploaded = mediaResponse.dateUploaded,
-                        license = mediaResponse.license,
-                        licenseUrl = mediaResponse.licenseUrl,
-                        author = mediaResponse.author,
-                        user = mediaResponse.user,
-                        categories = mediaResponse.categories,
-                        coordinates = mediaResponse.coordinates,
-                        captions = mediaResponse.captions,
-                        descriptions = mediaResponse.descriptions,
-                        depictionIds = mediaResponse.depictionIds,
-                        categoriesHiddenStatus = mediaResponse.categoriesHiddenStatus
-                    )
-                    // Remove existing fragment before showing new details
-                    if (::mediaDetails.isInitialized && mediaDetails.isAdded) {
-                        removeFragment(mediaDetails)
+            .subscribe(
+                { mediaResponse ->
+                    if (mediaResponse != null) {
+                        // Create a Media object from the response
+                        media = Media(
+                            pageId = mediaResponse.pageId,
+                            thumbUrl = mediaResponse.thumbUrl,
+                            imageUrl = mediaResponse.imageUrl,
+                            filename = mediaResponse.filename,
+                            fallbackDescription = mediaResponse.fallbackDescription,
+                            dateUploaded = mediaResponse.dateUploaded,
+                            license = mediaResponse.license,
+                            licenseUrl = mediaResponse.licenseUrl,
+                            author = mediaResponse.author,
+                            user = mediaResponse.user,
+                            categories = mediaResponse.categories,
+                            coordinates = mediaResponse.coordinates,
+                            captions = mediaResponse.captions,
+                            descriptions = mediaResponse.descriptions,
+                            depictionIds = mediaResponse.depictionIds,
+                            categoriesHiddenStatus = mediaResponse.categoriesHiddenStatus
+                        )
+                        // Remove existing fragment before showing new details
+                        if (::mediaDetails.isInitialized && mediaDetails.isAdded) {
+                            removeFragment(mediaDetails)
+                        }
+                        showMediaDetails()
+                    } else {
+                        Timber.e("Fetched media is null for image: $decodedImageName")
                     }
-                    showMediaDetails()
-                } else {
-                    Timber.e("Fetched media is null for image: $decodedImageName")
                 }
-            }, { throwable ->
+            ) { throwable ->
                 Timber.e(throwable, "Error fetching media for image: $decodedImageName")
-            })
+            }
     }
 
     private fun showMediaDetails() {
@@ -2595,10 +2602,10 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
             }
         } catch (e: Exception) {
             Timber.e(e)
-            //Broadcasts are tricky, should be catchedonR
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun setUserVisibleHint(isVisibleToUser: Boolean) {
         super.setUserVisibleHint(isVisibleToUser)
         this.isVisibleToUser = isVisibleToUser
@@ -2670,7 +2677,7 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     /**
-     * Recenters the map to the Center and adds a scale disk overlay and a marker at the position.
+     * Re-center the map to the Center and adds a scale disk overlay and a marker at the position.
      *
      * @param geoPoint The GeoPoint representing the new center position of the map.
      */
@@ -2841,6 +2848,8 @@ class NearbyParentFragment : CommonsDaggerSupportFragment(),
     }
 
     companion object {
+        private const val CAMERA_TARGET_SHIFT_FACTOR_PORTRAIT = 0.005
+        private const val CAMERA_TARGET_SHIFT_FACTOR_LANDSCAPE = 0.004
         private const val ZOOM_LEVEL: Double = 15.0
 
         /**
