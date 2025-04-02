@@ -13,7 +13,7 @@ apply(from = "$rootDir/jacoco.gradle")
 val isRunningOnTravisAndIsNotPRBuild = System.getenv("CI") == "true" && file("../play.p12").exists()
 
 if (isRunningOnTravisAndIsNotPRBuild) {
-    apply(from = libs.plugins.github.triplet.play)
+    apply(plugin = "com.github.triplet.play")
 }
 
 dependencies {
@@ -415,20 +415,20 @@ fun getTestPassword(): String? {
     return properties.getProperty("TEST_USER_PASSWORD")
 }
 
-//if (isRunningOnTravisAndIsNotPRBuild) {
-//    play {
-//        track = "alpha"
-//        userFraction = 1
-//        serviceAccountEmail = System.getenv("SERVICE_ACCOUNT_NAME")
-//        serviceAccountCredentials = file("../play.p12")
-//
-//        resolutionStrategy = "auto"
-//        outputProcessor { // this: ApkVariantOutput
-//            versionNameOverride = "$versionNameOverride.$versionCode"
-//        }
-//    }
-//}
-//
+if (isRunningOnTravisAndIsNotPRBuild) {
+    configure<com.github.triplet.gradle.play.PlayPublisherExtension> {
+        track = "alpha"
+        userFraction = 1.0
+        serviceAccountEmail = System.getenv("SERVICE_ACCOUNT_NAME")
+        serviceAccountCredentials = file("../play.p12")
+
+        resolutionStrategy = "auto"
+        outputProcessor { // this: ApkVariantOutput
+            versionNameOverride = "$versionNameOverride.$versionCode"
+        }
+    }
+}
+
 fun getBuildVersion(): String? {
     return try {
         val stdout = ByteArrayOutputStream()
