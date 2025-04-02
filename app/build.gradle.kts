@@ -2,11 +2,10 @@ import java.util.Properties
 import java.io.ByteArrayOutputStream
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.kapt")
-    id("org.jetbrains.kotlin.plugin.parcelize")
-    id("com.github.triplet.play") version "2.7.2" apply false
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kotlin.parcelize)
 }
 
 apply(from = "$rootDir/jacoco.gradle")
@@ -14,7 +13,7 @@ apply(from = "$rootDir/jacoco.gradle")
 val isRunningOnTravisAndIsNotPRBuild = System.getenv("CI") == "true" && file("../play.p12").exists()
 
 if (isRunningOnTravisAndIsNotPRBuild) {
-    apply(plugin = "com.github.triplet.play")
+    apply(from = libs.plugins.github.triplet.play)
 }
 
 dependencies {

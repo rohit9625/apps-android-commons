@@ -1,6 +1,6 @@
 [versions]
 
-agp = "8.7.0"
+agp = "8.9.1"
 acraDialog = "5.8.4"
 acraMail = "5.8.4"
 activityCompose = "1.9.3"
@@ -16,6 +16,8 @@ commonsIo = "2.6"
 compiler = "4.12.0"
 composeBom = "2024.11.00"
 constraintlayout = "1.1.3"
+dexcount = "4.0.0"
+githubTripletPlay = "2.7.2"
 httpFluent = "1.3"
 osmdroidAndroid = "6.1.17"
 testCore = "1.4.0"
@@ -40,7 +42,6 @@ junit = "4.13.2"
 junitJupiterApi = "5.10.0"
 junitJupiterEngine = "5.10.0"
 kotlin = "1.9.22"
-kotlinReflect = "1.9.22"
 kotlinxCoroutinesTest = "1.7.3"
 leakcanaryAndroid = "2.10"
 library = "1.2.0"
@@ -228,7 +229,7 @@ okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 renderers = { module = "com.github.pedrovgs:renderers", version.ref = "renderersVersion" }
 viewpagerindicator-library = { module = "fr.avianey.com.viewpagerindicator:library", version.ref = "libraryVersion" }
 juanitobananas-androidDmediaUtil = { module = "com.github.juanitobananas:AndroidMediaUtil", version.ref = "androidmediautil" }
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinReflect" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 
 # Map & location services
 android-sdk = { module = "org.maplibre.gl:android-sdk", version.ref = "androidSdkVersion" }
@@ -237,3 +238,7 @@ android-plugin-scalebar-v9 = { module = "org.maplibre.gl:android-plugin-scalebar
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt" }
+kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize" }
+github-triplet-play = { id = "com.github.triplet.play", version.ref = "githubTripletPlay" }
+getkeepsafe-dexcount = { id = "com.getkeepsafe.dexcount", version.ref = "dexcount" }

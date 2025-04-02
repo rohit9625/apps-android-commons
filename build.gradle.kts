@@ -9,9 +9,10 @@
 //}
 
 plugins {
-    id("com.android.application") version "8.9.1" apply false
-    id("org.jetbrains.kotlin.android") version "1.9.22" apply false
-    id("com.getkeepsafe.dexcount") version "4.0.0"
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.jetbrains.kotlin.android) apply false
+    alias(libs.plugins.github.triplet.play) apply false
+    alias(libs.plugins.getkeepsafe.dexcount)
 }
 
 //subprojects{
