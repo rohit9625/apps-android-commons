@@ -18,188 +18,165 @@ if (isRunningOnTravisAndIsNotPRBuild) {
 }
 
 dependencies {
-    val KOTLIN_VERSION="1.9.22"
-    val LEAK_CANARY_VERSION="2.10"
-    val DAGGER_VERSION="2.23"
-    val ROOM_VERSION="2.6.1"
-    val PREFERENCE_VERSION="1.2.1"
-    val CORE_KTX_VERSION="1.9.0"
-    val ADAPTER_DELEGATES_VERSION="4.3.0"
-    val PAGING_VERSION="2.1.2"
-    val MULTIDEX_VERSION="2.0.1"
-    val OKHTTP_VERSION="4.10.0"
-    val MAPLIBRE_VERSION="10.0.1"
-    val OSMDROID_VERSION="6.1.17"
     // Utils
-    implementation("in.yuvi:http.fluent:1.3")
-    implementation("com.google.code.gson:gson:2.8.5")
-    implementation("com.squareup.okhttp3:okhttp:$OKHTTP_VERSION!!") {
-        // Forcing dependency versions using force = true on a first-level dependency has been deprecated.
-        //  Ref: https://docs.gradle.org/7.5/userguide/upgrading_version_5.html#forced_dependencies
-        //force = true //API 19 support
-    }
-    implementation("com.squareup.retrofit2:retrofit:2.8.1")
-    implementation("com.squareup.retrofit2:converter-gson:2.8.1")
-    implementation("com.squareup.retrofit2:adapter-rxjava2:2.8.1")
-    implementation("com.squareup.okio:okio:2.2.2")
-    implementation("io.reactivex.rxjava2:rxandroid:2.1.0")
-    implementation("io.reactivex.rxjava2:rxjava:2.2.3")
-    implementation("com.jakewharton.rxbinding2:rxbinding:2.1.1")
-    implementation("com.jakewharton.rxbinding3:rxbinding-appcompat:3.0.0")
-    implementation("com.jakewharton.rxbinding2:rxbinding-support-v4:2.1.1")
-    implementation("com.jakewharton.rxbinding2:rxbinding-appcompat-v7:2.1.1")
-    implementation("com.jakewharton.rxbinding2:rxbinding-design:2.1.1")
-    implementation("com.facebook.fresco:fresco:1.13.0")
-    implementation("org.apache.commons:commons-lang3:3.8.1")
+    implementation(libs.http.fluent)
+    implementation(libs.gson)
+    implementation(libs.okhttp)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit2.converter.gson)
+    implementation(libs.retrofit2.adapter.rxjava2)
+    implementation(libs.okio)
+    implementation(libs.rxandroid)
+    implementation(libs.rxjava)
+    implementation(libs.rxbinding)
+    implementation(libs.rxbinding.appcompat)
+    implementation(libs.rxbinding.support.v4)
+    implementation(libs.rxbinding.appcompat.v7)
+    implementation(libs.rxbinding.design)
+    implementation(libs.facebook.fresco)
+    implementation(libs.apache.commons.lang3)
 
     // UI
-    implementation("fr.avianey.com.viewpagerindicator:library:2.4.1.1@aar")
-    implementation("com.github.chrisbanes:PhotoView:2.0.0")
-    implementation("com.github.pedrovgs:renderers:3.3.3")
-    implementation("org.maplibre.gl:android-sdk:$MAPLIBRE_VERSION")
-    implementation("org.maplibre.gl:android-plugin-scalebar-v9:1.0.0")
+    implementation("${libs.viewpagerindicator.library.get()}@aar")
+    implementation(libs.photoview)
+    implementation(libs.renderers)
+    implementation(libs.android.sdk)
+    implementation(libs.android.plugin.scalebar.v9)
 
-    implementation("com.jakewharton.timber:timber:4.7.1")
-    implementation("com.github.deano2390:MaterialShowcaseView:1.2.0")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("com.karumi:dexter:5.0.0")
-    implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    implementation(libs.timber)
+    implementation(libs.materialshowcaseview)
+    implementation(libs.android.material)
+    implementation(libs.dexter)
+    implementation(libs.androidx.lifecycle.extensions) // Check if we can remove this
 
     // Jetpack Compose
-    val composeBom = platform("androidx.compose:compose-bom:2024.11.00")
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.runtime) // See if this can be removed
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.ui.viewbinding)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.foundation) // Check if this can be removed
+    implementation(libs.androidx.foundation.layout)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
-    implementation(composeBom)
-    implementation("androidx.compose.runtime:runtime")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-viewbinding")
-    implementation("androidx.compose.ui:ui-graphics")
-    implementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.foundation:foundation-layout")
-    implementation("androidx.compose.material3:material3")
-    androidTestImplementation(composeBom)
-
-    implementation("com.hannesdorfmann:adapterdelegates4-kotlin-dsl-viewbinding:$ADAPTER_DELEGATES_VERSION")
-    implementation("com.hannesdorfmann:adapterdelegates4-pagination:$ADAPTER_DELEGATES_VERSION")
-    implementation("androidx.paging:paging-runtime-ktx:$PAGING_VERSION")
-    testImplementation("androidx.paging:paging-common-ktx:$PAGING_VERSION")
-    implementation("androidx.paging:paging-rxjava2-ktx:$PAGING_VERSION")
-    implementation("androidx.recyclerview:recyclerview:1.2.0-alpha02")
-    implementation("com.squareup.okhttp3:okhttp-ws:$OKHTTP_VERSION")
+    implementation(libs.adapterdelegates4.kotlin.dsl.viewbinding)
+    implementation(libs.adapterdelegates4.pagination)
+    implementation(libs.androidx.paging.runtime.ktx)
+    testImplementation(libs.androidx.paging.common.ktx)
+    implementation(libs.androidx.paging.rxjava2.ktx)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.okhttp.ws)
 
     // Logging
-    implementation("ch.acra:acra-dialog:5.8.4")
-    implementation("ch.acra:acra-mail:5.8.4")
-    implementation("org.slf4j:slf4j-api:1.7.25")
-    api("com.github.tony19:logback-android-classic:1.1.1-6") {
+    implementation(libs.acra.dialog)
+    implementation(libs.acra.mail)
+    implementation(libs.slf4j.api) // See if this can be removed
+    implementation("com.github.tony19:logback-android-classic:1.1.1-6") {
         exclude(group = "com.google.android", module = "android")
     }
-    implementation("com.squareup.okhttp3:logging-interceptor:$OKHTTP_VERSION")
+    implementation(libs.logging.interceptor)
 
     // Dependency injector
-    implementation("com.google.dagger:dagger-android:$DAGGER_VERSION")
-    implementation("com.google.dagger:dagger-android-support:$DAGGER_VERSION")
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
-    kapt("com.google.dagger:dagger-android-processor:$DAGGER_VERSION")
-    kapt("com.google.dagger:dagger-compiler:$DAGGER_VERSION")
-    annotationProcessor("com.google.dagger:dagger-android-processor:$DAGGER_VERSION")
+    implementation(libs.dagger.android)
+    implementation(libs.dagger.android.support)
+    kapt(libs.dagger.android.processor)
+    kapt(libs.dagger.compiler)
+    annotationProcessor(libs.dagger.android.processor)
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$KOTLIN_VERSION")
+    implementation(libs.kotlin.reflect)
 
     //Mocking
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
-    testImplementation("org.mockito:mockito-core:5.6.0")
-    testImplementation("org.powermock:powermock-module-junit4:2.0.9")
-    testImplementation("org.powermock:powermock-api-mockito2:2.0.9")
-    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockito.inline)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.powermock.module.junit4)
+    testImplementation(libs.powermock.api.mockito2)
+    testImplementation(libs.mockk)
 
     // Unit testing
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.11.1")
-    testImplementation("androidx.test:core:1.5.0")
-    testImplementation("androidx.test:runner:1.5.2")
-    testImplementation("androidx.test.ext:junit:1.1.5")
-    testImplementation("androidx.test:rules:1.5.0")
-    testImplementation("com.squareup.okhttp3:mockwebserver:$OKHTTP_VERSION")
-    testImplementation("com.jraska.livedata:testing-ktx:1.2.0")
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-    testImplementation("com.facebook.soloader:soloader:0.10.5")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    debugImplementation("androidx.fragment:fragment-testing:1.6.2")
-    testImplementation("commons-io:commons-io:2.6")
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.runner)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.androidx.test.rules)
+    testImplementation(libs.mockwebserver)
+    testImplementation(libs.testing.ktx)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.soloader)
+    testImplementation(libs.kotlinx.coroutines.test)
+    debugImplementation(libs.androidx.fragment.testing)
+    testImplementation(libs.commons.io)
 
     // Android testing
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0-alpha04")
-    androidTestImplementation("androidx.test.espresso:espresso-intents:3.4.0")
-    androidTestImplementation("androidx.test.espresso:espresso-contrib:3.5.0-alpha04")
-    androidTestImplementation("androidx.test:runner:1.4.0")
-    androidTestImplementation("androidx.test:rules:1.4.1-alpha04")
-    androidTestImplementation("androidx.test:core:1.4.0")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.annotation:annotation:1.3.0")
-    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.8.0")
-    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
-    androidTestUtil("androidx.test:orchestrator:1.4.1")
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.intents)
+    androidTestImplementation(libs.androidx.espresso.contrib)
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.annotation)
+    androidTestImplementation(libs.mockwebserver)
+    androidTestImplementation(libs.androidx.uiautomator)
+    androidTestUtil(libs.androidx.orchestrator)
 
     // Debugging
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:$LEAK_CANARY_VERSION")
+    debugImplementation(libs.leakcanary.android)
 
     // Support libraries
-    implementation("com.google.android.material:material:1.1.0-alpha04")
-    implementation("androidx.browser:browser:1.3.0")
-    implementation("androidx.cardview:cardview:1.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:1.1.3")
-    implementation("androidx.exifinterface:exifinterface:1.3.7")
-    implementation("androidx.core:core-ktx:$CORE_KTX_VERSION")
-    implementation("com.simplecityapps:recyclerview-fastscroll:2.0.1")
+    implementation(libs.androidx.browser)
+    implementation(libs.androidx.cardview)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.exifinterface)
+    implementation(libs.recyclerview.fastscroll)
 
     //swipe_layout
-    implementation("com.daimajia.swipelayout:library:1.2.0@aar")
+    implementation(libs.swipelayout.library)
 
     //Room
-    implementation("androidx.room:room-runtime:$ROOM_VERSION")
-    implementation("androidx.room:room-ktx:$ROOM_VERSION")
-    implementation("androidx.room:room-rxjava2:$ROOM_VERSION")
-    kapt("androidx.room:room-compiler:$ROOM_VERSION")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.rxjava2)
+    kapt(libs.androidx.room.compiler)
     // For Kotlin use kapt instead of annotationProcessor
-    testImplementation("androidx.arch.core:core-testing:2.1.0")
+    testImplementation(libs.core.testing)
 
-    // Pref
-    // Java language implementation
-    implementation("androidx.preference:preference:$PREFERENCE_VERSION")
-    // Kotlin
-    implementation("androidx.preference:preference-ktx:$PREFERENCE_VERSION")
+    // Preferences
+    implementation(libs.androidx.preference)
+    implementation(libs.androidx.preference.ktx)
+
     //Android Media
-    implementation("com.github.juanitobananas:AndroidMediaUtil:v1.0-1")
+    implementation(libs.juanitobananas.androidDmediaUtil)
+    implementation(libs.androidx.multidex)
 
-    implementation("androidx.multidex:multidex:$MULTIDEX_VERSION")
-
-    val work_version = "2.8.1"
     // Kotlin + coroutines
-    implementation("androidx.work:work-runtime-ktx:$work_version")
-    implementation("androidx.work:work-runtime:$work_version")
-    testImplementation("androidx.work:work-testing:$work_version")
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.work.runtime)
+    testImplementation(libs.androidx.work.testing)
 
     //Glide
-    implementation("com.github.bumptech.glide:glide:4.12.0")
-    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
-    kaptTest("androidx.databinding:databinding-compiler:8.0.2")
-    kaptAndroidTest("androidx.databinding:databinding-compiler:8.0.2")
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
+    kaptTest(libs.androidx.databinding.compiler)
+    kaptAndroidTest(libs.androidx.databinding.compiler)
 
     implementation("io.github.coordinates2country:coordinates2country-android:1.8") {
         exclude(group = "com.google.android", module = "android")
     }
 
     //OSMDroid
-    implementation("org.osmdroid:osmdroid-android:$OSMDROID_VERSION")
+    implementation(libs.osmdroid.android)
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.0") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
